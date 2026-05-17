@@ -1,0 +1,1199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AmmazanBD — Digital Library</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;0,700;1,300;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0a0a0f;
+      --surface: #111118;
+      --surface2: #18181f;
+      --border: rgba(255,255,255,0.07);
+      --gold: #c9a84c;
+      --gold2: #e8c97a;
+      --gold-glow: rgba(201,168,76,0.18);
+      --text: #f0ede6;
+      --muted: #7a7870;
+      --accent: #2a2a38;
+      --red: #e05555;
+      --green: #5a9e72;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* ─── NOISE TEXTURE OVERLAY ─── */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
+      pointer-events: none;
+      z-index: 9999;
+    }
+
+    /* ════════════════════════════════
+       LOGIN PAGE
+    ════════════════════════════════ */
+    #login-page {
+      position: fixed;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      background: var(--bg);
+      transition: opacity 0.7s ease, transform 0.7s ease;
+    }
+
+    #login-page.hidden {
+      opacity: 0;
+      pointer-events: none;
+      transform: scale(1.04);
+    }
+
+    .login-bg {
+      position: absolute;
+      inset: 0;
+      overflow: hidden;
+    }
+
+    .login-bg::before {
+      content: '';
+      position: absolute;
+      width: 600px;
+      height: 600px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(201,168,76,0.12) 0%, transparent 70%);
+      top: -200px;
+      left: -100px;
+      animation: float1 8s ease-in-out infinite;
+    }
+
+    .login-bg::after {
+      content: '';
+      position: absolute;
+      width: 500px;
+      height: 500px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(90,80,170,0.1) 0%, transparent 70%);
+      bottom: -100px;
+      right: -50px;
+      animation: float2 10s ease-in-out infinite;
+    }
+
+    @keyframes float1 { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-30px)} }
+    @keyframes float2 { 0%,100%{transform:translateY(0)} 50%{transform:translateY(30px)} }
+
+    .login-card {
+      position: relative;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      padding: 56px 52px;
+      width: 100%;
+      max-width: 440px;
+      box-shadow: 0 40px 80px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.04);
+      backdrop-filter: blur(20px);
+      animation: slideUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) both;
+    }
+
+    @keyframes slideUp {
+      from { opacity: 0; transform: translateY(40px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .login-logo {
+      text-align: center;
+      margin-bottom: 36px;
+    }
+
+    .login-logo .book-icon {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 64px;
+      height: 64px;
+      border-radius: 16px;
+      background: linear-gradient(135deg, var(--gold), #8b6914);
+      font-size: 28px;
+      color: #0a0a0f;
+      margin-bottom: 16px;
+      box-shadow: 0 8px 24px rgba(201,168,76,0.3);
+    }
+
+    .login-logo h1 {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 2.2rem;
+      font-weight: 600;
+      letter-spacing: 0.02em;
+      background: linear-gradient(135deg, var(--gold2), var(--gold));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .login-logo p {
+      color: var(--muted);
+      font-size: 0.85rem;
+      margin-top: 6px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .login-field {
+      margin-bottom: 20px;
+    }
+
+    .login-field label {
+      display: block;
+      font-size: 0.78rem;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: var(--muted);
+      margin-bottom: 8px;
+    }
+
+    .input-wrap {
+      position: relative;
+    }
+
+    .input-wrap i {
+      position: absolute;
+      left: 16px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--muted);
+      font-size: 0.9rem;
+      transition: color 0.3s;
+    }
+
+    .login-field input {
+      width: 100%;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 14px 16px 14px 44px;
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.95rem;
+      outline: none;
+      transition: border-color 0.3s, box-shadow 0.3s;
+    }
+
+    .login-field input:focus {
+      border-color: var(--gold);
+      box-shadow: 0 0 0 3px var(--gold-glow);
+    }
+
+    .login-field input:focus + i,
+    .input-wrap:focus-within i { color: var(--gold); }
+
+    .login-btn {
+      width: 100%;
+      padding: 15px;
+      border-radius: 12px;
+      border: none;
+      background: linear-gradient(135deg, var(--gold), #8b6914);
+      color: #0a0a0f;
+      font-family: 'DM Sans', sans-serif;
+      font-weight: 500;
+      font-size: 0.95rem;
+      letter-spacing: 0.05em;
+      cursor: pointer;
+      margin-top: 8px;
+      transition: opacity 0.3s, transform 0.3s, box-shadow 0.3s;
+      box-shadow: 0 8px 24px rgba(201,168,76,0.25);
+    }
+
+    .login-btn:hover {
+      opacity: 0.9;
+      transform: translateY(-1px);
+      box-shadow: 0 12px 32px rgba(201,168,76,0.35);
+    }
+
+    .login-btn:active { transform: translateY(0); }
+
+    .login-error {
+      background: rgba(224,85,85,0.12);
+      border: 1px solid rgba(224,85,85,0.3);
+      border-radius: 10px;
+      padding: 10px 14px;
+      color: #e07070;
+      font-size: 0.85rem;
+      margin-top: 14px;
+      display: none;
+      animation: shake 0.4s ease;
+    }
+
+    .login-error.show { display: block; }
+
+    @keyframes shake {
+      0%,100%{transform:translateX(0)} 25%{transform:translateX(-6px)} 75%{transform:translateX(6px)}
+    }
+
+    .login-hint {
+      text-align: center;
+      color: var(--muted);
+      font-size: 0.78rem;
+      margin-top: 20px;
+      letter-spacing: 0.04em;
+    }
+
+    /* ════════════════════════════════
+       MAIN APP
+    ════════════════════════════════ */
+    #app { display: none; }
+    #app.visible { display: block; animation: fadeIn 0.8s ease; }
+    @keyframes fadeIn { from{opacity:0} to{opacity:1} }
+
+    /* ── HEADER ── */
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: rgba(10,10,15,0.85);
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .navbar {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 0 32px;
+      height: 72px;
+      display: flex;
+      align-items: center;
+      gap: 24px;
+    }
+
+    .nav-brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      text-decoration: none;
+      flex-shrink: 0;
+    }
+
+    .nav-brand .brand-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: 9px;
+      background: linear-gradient(135deg, var(--gold), #8b6914);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      color: #0a0a0f;
+    }
+
+    .nav-brand h2 {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.5rem;
+      font-weight: 600;
+      background: linear-gradient(135deg, var(--gold2), var(--gold));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .nav-search {
+      flex: 1;
+      max-width: 520px;
+      position: relative;
+    }
+
+    .nav-search input {
+      width: 100%;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 50px;
+      padding: 10px 20px 10px 44px;
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.9rem;
+      outline: none;
+      transition: border-color 0.3s, box-shadow 0.3s;
+    }
+
+    .nav-search input::placeholder { color: var(--muted); }
+    .nav-search input:focus {
+      border-color: var(--gold);
+      box-shadow: 0 0 0 3px var(--gold-glow);
+    }
+
+    .nav-search i {
+      position: absolute;
+      left: 16px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+
+    .nav-right {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-left: auto;
+    }
+
+    .nav-tag {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 7px 14px;
+      border-radius: 50px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      font-size: 0.8rem;
+      color: var(--muted);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .nav-tag:hover { border-color: var(--gold); color: var(--gold); }
+
+    .logout-btn {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 7px 16px;
+      border-radius: 50px;
+      background: transparent;
+      border: 1px solid rgba(224,85,85,0.3);
+      color: #e07070;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.8rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .logout-btn:hover {
+      background: rgba(224,85,85,0.1);
+      border-color: var(--red);
+    }
+
+    /* ── HERO ── */
+    .hero {
+      position: relative;
+      padding: 80px 32px 60px;
+      max-width: 1400px;
+      margin: 0 auto;
+      overflow: hidden;
+    }
+
+    .hero-glow {
+      position: absolute;
+      top: -100px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 800px;
+      height: 400px;
+      background: radial-gradient(ellipse, rgba(201,168,76,0.08) 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--gold-glow);
+      border: 1px solid rgba(201,168,76,0.3);
+      border-radius: 50px;
+      padding: 6px 16px;
+      font-size: 0.78rem;
+      color: var(--gold);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      margin-bottom: 20px;
+    }
+
+    .hero-badge i { font-size: 0.7rem; }
+
+    .hero h1 {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: clamp(2.8rem, 5vw, 4.5rem);
+      font-weight: 600;
+      line-height: 1.1;
+      letter-spacing: -0.01em;
+      margin-bottom: 16px;
+    }
+
+    .hero h1 em {
+      font-style: italic;
+      background: linear-gradient(135deg, var(--gold2), var(--gold));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .hero p {
+      color: var(--muted);
+      font-size: 1.05rem;
+      max-width: 500px;
+      line-height: 1.7;
+      margin-bottom: 40px;
+    }
+
+    .hero-stats {
+      display: flex;
+      gap: 40px;
+      flex-wrap: wrap;
+    }
+
+    .stat {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .stat-num {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 2rem;
+      font-weight: 700;
+      color: var(--gold2);
+      line-height: 1;
+    }
+
+    .stat-label {
+      font-size: 0.78rem;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      margin-top: 4px;
+    }
+
+    /* ── CATEGORY FILTER BAR ── */
+    .filter-section {
+      padding: 0 32px 32px;
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+
+    .filter-label {
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 0.14em;
+      color: var(--muted);
+      margin-bottom: 14px;
+    }
+
+    .filter-tabs {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .filter-tab {
+      padding: 8px 18px;
+      border-radius: 50px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      color: var(--muted);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.82rem;
+      cursor: pointer;
+      transition: all 0.25s;
+      white-space: nowrap;
+    }
+
+    .filter-tab:hover { border-color: var(--gold); color: var(--gold-lighter, #d4a96b); }
+
+    .filter-tab.active {
+      background: linear-gradient(135deg, var(--gold), #8b6914);
+      border-color: transparent;
+      color: #0a0a0f;
+      font-weight: 500;
+    }
+
+    /* ── BOOK GRID ── */
+    .library-section {
+      padding: 0 32px 80px;
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+
+    .section-header {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      margin-bottom: 28px;
+    }
+
+    .section-title {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.8rem;
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    .result-count {
+      font-size: 0.8rem;
+      color: var(--muted);
+    }
+
+    .book-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 20px;
+    }
+
+    .book-card {
+      position: relative;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      overflow: hidden;
+      cursor: pointer;
+      transition: transform 0.35s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.35s ease, border-color 0.3s;
+      animation: cardIn 0.5s ease both;
+    }
+
+    @keyframes cardIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .book-card:hover {
+      transform: translateY(-8px) scale(1.01);
+      box-shadow: 0 24px 48px rgba(0,0,0,0.4), 0 0 0 1px rgba(201,168,76,0.25);
+      border-color: rgba(201,168,76,0.3);
+    }
+
+    .book-cover {
+      position: relative;
+      aspect-ratio: 3/4;
+      background: var(--surface2);
+      overflow: hidden;
+    }
+
+    .book-cover img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transition: transform 0.5s ease;
+    }
+
+    .book-card:hover .book-cover img { transform: scale(1.06); }
+
+    .book-cover-fallback {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      font-size: 2.5rem;
+      color: var(--muted);
+    }
+
+    .book-cover-fallback span {
+      font-size: 0.75rem;
+      font-family: 'DM Sans', sans-serif;
+      text-align: center;
+      padding: 0 12px;
+      color: var(--muted);
+      line-height: 1.4;
+    }
+
+    .book-category-badge {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      background: rgba(10,10,15,0.75);
+      backdrop-filter: blur(8px);
+      border: 1px solid var(--border);
+      border-radius: 50px;
+      padding: 3px 10px;
+      font-size: 0.65rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--gold);
+    }
+
+    .book-overlay {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(to top, rgba(10,10,15,0.95) 0%, transparent 50%);
+      opacity: 0;
+      transition: opacity 0.3s;
+      display: flex;
+      align-items: flex-end;
+      padding: 16px;
+    }
+
+    .book-card:hover .book-overlay { opacity: 1; }
+
+    .read-btn {
+      width: 100%;
+      padding: 10px;
+      background: linear-gradient(135deg, var(--gold), #8b6914);
+      border: none;
+      border-radius: 10px;
+      color: #0a0a0f;
+      font-family: 'DM Sans', sans-serif;
+      font-weight: 500;
+      font-size: 0.82rem;
+      cursor: pointer;
+      letter-spacing: 0.04em;
+      transition: opacity 0.2s;
+      text-decoration: none;
+      text-align: center;
+      display: block;
+    }
+
+    .read-btn:hover { opacity: 0.88; }
+
+    .book-info {
+      padding: 14px 14px 16px;
+    }
+
+    .book-title {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1rem;
+      font-weight: 600;
+      line-height: 1.3;
+      color: var(--text);
+      margin-bottom: 4px;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    .book-sub {
+      font-size: 0.72rem;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    /* ── EMPTY STATE ── */
+    .empty-state {
+      grid-column: 1 / -1;
+      text-align: center;
+      padding: 80px 20px;
+    }
+
+    .empty-state i {
+      font-size: 3rem;
+      color: var(--muted);
+      margin-bottom: 16px;
+    }
+
+    .empty-state h3 {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.5rem;
+      color: var(--text);
+      margin-bottom: 8px;
+    }
+
+    .empty-state p { color: var(--muted); font-size: 0.9rem; }
+
+    /* ── FOOTER ── */
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 48px 32px;
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+
+    .footer-inner {
+      display: grid;
+      grid-template-columns: 1fr 2fr;
+      gap: 48px;
+      margin-bottom: 40px;
+    }
+
+    .footer-brand .book-icon {
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, var(--gold), #8b6914);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      color: #0a0a0f;
+      margin-bottom: 12px;
+    }
+
+    .footer-brand h3 {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.4rem;
+      font-weight: 600;
+      background: linear-gradient(135deg, var(--gold2), var(--gold));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 8px;
+    }
+
+    .footer-brand p { font-size: 0.82rem; color: var(--muted); line-height: 1.6; }
+
+    .footer-links {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 32px;
+    }
+
+    .footer-col h4 {
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: var(--muted);
+      margin-bottom: 14px;
+    }
+
+    .footer-col a {
+      display: block;
+      color: rgba(240,237,230,0.6);
+      font-size: 0.83rem;
+      text-decoration: none;
+      margin-bottom: 8px;
+      transition: color 0.2s;
+    }
+
+    .footer-col a:hover { color: var(--gold); }
+
+    .footer-bottom {
+      padding-top: 24px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .footer-bottom p { font-size: 0.78rem; color: var(--muted); }
+
+    /* ── SCROLL TO TOP ── */
+    .back-top {
+      position: fixed;
+      bottom: 32px;
+      right: 32px;
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--gold), #8b6914);
+      border: none;
+      color: #0a0a0f;
+      font-size: 16px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 8px 24px rgba(201,168,76,0.3);
+      opacity: 0;
+      transform: translateY(12px);
+      transition: opacity 0.3s, transform 0.3s;
+      z-index: 500;
+    }
+
+    .back-top.visible { opacity: 1; transform: translateY(0); }
+    .back-top:hover { opacity: 0.85; }
+
+    /* ── TOAST ── */
+    .toast {
+      position: fixed;
+      bottom: 90px;
+      right: 32px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 14px 20px;
+      font-size: 0.85rem;
+      color: var(--text);
+      box-shadow: 0 16px 40px rgba(0,0,0,0.4);
+      z-index: 600;
+      transform: translateX(120%);
+      transition: transform 0.4s cubic-bezier(0.34,1.56,0.64,1);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      max-width: 280px;
+    }
+
+    .toast.show { transform: translateX(0); }
+    .toast i { color: var(--gold); }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 768px) {
+      .navbar { padding: 0 16px; gap: 12px; }
+      .nav-tag { display: none; }
+      .hero { padding: 48px 16px 40px; }
+      .filter-section, .library-section { padding-left: 16px; padding-right: 16px; }
+      .book-grid { grid-template-columns: repeat(auto-fill, minmax(155px, 1fr)); gap: 14px; }
+      .footer-inner { grid-template-columns: 1fr; }
+      .footer-links { grid-template-columns: repeat(2, 1fr); }
+      .login-card { padding: 40px 28px; margin: 16px; }
+      footer { padding: 40px 16px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ════════════ LOGIN PAGE ════════════ -->
+<div id="login-page">
+  <div class="login-bg"></div>
+  <div class="login-card">
+    <div class="login-logo">
+      <div class="book-icon"><i class="fa-solid fa-book-open"></i></div>
+      <h1>AmmazanBD</h1>
+      <p>Digital Library Portal</p>
+    </div>
+
+    <div class="login-field">
+      <label>Username</label>
+      <div class="input-wrap">
+        <input type="text" id="login-id" placeholder="Enter your ID" autocomplete="off">
+        <i class="fa-solid fa-user"></i>
+      </div>
+    </div>
+
+    <div class="login-field">
+      <label>Password</label>
+      <div class="input-wrap">
+        <input type="password" id="login-pass" placeholder="Enter password" autocomplete="off">
+        <i class="fa-solid fa-lock"></i>
+      </div>
+    </div>
+
+    <button class="login-btn" onclick="handleLogin()">
+      <i class="fa-solid fa-arrow-right-to-bracket"></i> Sign In to Library
+    </button>
+
+    <div class="login-error" id="login-error">
+      <i class="fa-solid fa-circle-exclamation"></i> Invalid credentials. Please try again.
+    </div>
+
+    <p class="login-hint">Access 10,000+ books across all categories</p>
+  </div>
+</div>
+
+<!-- ════════════ MAIN APP ════════════ -->
+<div id="app">
+
+  <!-- HEADER -->
+  <header>
+    <div class="navbar">
+      <a class="nav-brand">
+        <div class="brand-icon"><i class="fa-solid fa-book-open"></i></div>
+        <h2>AmmazanBD</h2>
+      </a>
+      <div class="nav-search">
+        <i class="fa-solid fa-magnifying-glass"></i>
+        <input type="text" id="search-input" placeholder="Search books, categories…" oninput="filterBooks()">
+      </div>
+      <div class="nav-right">
+        <div class="nav-tag"><i class="fa-solid fa-location-dot"></i> Bangladesh</div>
+        <div class="nav-tag"><i class="fa-solid fa-cart-arrow-down"></i> Cart</div>
+        <button class="logout-btn" onclick="handleLogout()"><i class="fa-solid fa-right-from-bracket"></i> Logout</button>
+      </div>
+    </div>
+  </header>
+
+  <!-- HERO -->
+  <div class="hero">
+    <div class="hero-glow"></div>
+    <div class="hero-badge"><i class="fa-solid fa-star"></i> Bangladesh's Premier eBook Library</div>
+    <h1>Discover <em>Knowledge</em><br>Without Limits</h1>
+    <p>Explore over 10,000 curated eBooks spanning Islamic literature, self-development, fiction, history, and beyond — all free to read.</p>
+    <div class="hero-stats">
+      <div class="stat"><span class="stat-num">10K+</span><span class="stat-label">eBooks</span></div>
+      <div class="stat"><span class="stat-num">12+</span><span class="stat-label">Categories</span></div>
+      <div class="stat"><span class="stat-num">100%</span><span class="stat-label">Free Access</span></div>
+    </div>
+  </div>
+
+  <!-- FILTERS -->
+  <div class="filter-section">
+    <p class="filter-label">Browse by Category</p>
+    <div class="filter-tabs" id="filter-tabs"></div>
+  </div>
+
+  <!-- LIBRARY GRID -->
+  <div class="library-section">
+    <div class="section-header">
+      <h2 class="section-title">All Books</h2>
+      <span class="result-count" id="result-count"></span>
+    </div>
+    <div class="book-grid" id="book-grid"></div>
+  </div>
+
+  <!-- FOOTER -->
+  <footer>
+    <div class="footer-inner">
+      <div class="footer-brand">
+        <div class="book-icon"><i class="fa-solid fa-book-open"></i></div>
+        <h3>AmmazanBD</h3>
+        <p>Bangladesh's most comprehensive free digital library, bringing knowledge to every reader across the nation.</p>
+      </div>
+      <div class="footer-links">
+        <div class="footer-col">
+          <h4>Know Us</h4>
+          <a href="#">Careers</a>
+          <a href="#">Blog</a>
+          <a href="#">About</a>
+          <a href="#">Press</a>
+        </div>
+        <div class="footer-col">
+          <h4>Contribute</h4>
+          <a href="#">Add a Book</a>
+          <a href="#">Become Affiliate</a>
+          <a href="#">Partnerships</a>
+          <a href="#">Donate</a>
+        </div>
+        <div class="footer-col">
+          <h4>Help</h4>
+          <a href="#">Your Account</a>
+          <a href="#">FAQ</a>
+          <a href="#">Contact Us</a>
+          <a href="#">Privacy Policy</a>
+        </div>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p>© 2024 AmmazanBD.com — All rights reserved</p>
+      <p>Conditions of Use · Privacy Notice · Ads Privacy</p>
+    </div>
+  </footer>
+
+</div>
+
+<!-- SCROLL TOP -->
+<button class="back-top" id="back-top" onclick="window.scrollTo({top:0,behavior:'smooth'})">
+  <i class="fa-solid fa-chevron-up"></i>
+</button>
+
+<!-- TOAST -->
+<div class="toast" id="toast"><i class="fa-solid fa-check-circle"></i> <span id="toast-msg"></span></div>
+
+<script>
+/* ═══ DATA ═══ */
+const books = [
+  { id:1,  title:"আল কোরআন",                   cat:"ইসলামিক",       emoji:"📖", url:"https://drive.google.com/drive/folders/1vcS3xMkbMyrCtLIniKLTcKjMvr53Bt_P?usp=sharing",       img:"./images/আল কোরআন.jpeg" },
+  { id:2,  title:"আল হাদিস",                    cat:"ইসলামিক",       emoji:"🕌", url:"https://drive.google.com/drive/folders/1spkPHiCdgjlP6AtM00PI1KZlJMBbgmO6?usp=sharing",       img:"./images/আল হাদিস.jpeg" },
+  { id:3,  title:"২,০০০+ ইসলামিক বই",           cat:"ইসলামিক",       emoji:"📚", url:"https://drive.google.com/drive/folders/1_dsUZ08rwONYm33S7HSHC1RZjf_voBrU",                   img:"./images/2000 islamic books.jpeg" },
+  { id:4,  title:"ইসলামিক ইতিহাস",              cat:"ইসলামিক",       emoji:"🏛️", url:"https://drive.google.com/drive/folders/1j7HC2aoxAALZBNrdCVNepBq6_uk50MJG?usp=sharing",       img:"./images/islamic history.jpeg" },
+  { id:5,  title:"ইসলামিক সাহিত্য",             cat:"ইসলামিক",       emoji:"✍️", url:"https://drive.google.com/drive/folders/1FqxzyQjMVYJyyixPzYxhTMDSF7bCSttZ?usp=sharing",       img:"./images/islamic literature.jpeg" },
+  { id:6,  title:"২,০০০+ পিডিএফ বই",           cat:"কালেকশন",       emoji:"📂", url:"https://drive.google.com/folderview?id=1dgkfYgaG9HksnFL1MWyTH8ivwPb8CFev",                  img:"./images/২,০০০ পি ডি এফ বই.jpeg" },
+  { id:7,  title:"১৩০০+ পিডিএফ বই",            cat:"কালেকশন",       emoji:"📦", url:"https://drive.google.com/folderview?id=1Zgm8lDTVvUFnU8p35kh4bRSObt-iJIrh",                  img:"./images/১৩০০ পি ডি এফ বই.jpeg" },
+  { id:8,  title:"মোটিভেশনাল বুক ০১",           cat:"মোটিভেশন",      emoji:"🔥", url:"https://drive.google.com/drive/folders/1iILztYqzDjHkDR0Lz6hGUy35UYOu2Sv8",                  img:"./images/মোটিভিশনাল বুক 01.jpeg" },
+  { id:9,  title:"৪০ বাংলা অনুবাদ মোটিভেশনাল", cat:"মোটিভেশন",      emoji:"💡", url:"https://drive.google.com/drive/folders/1HCYsjSflAGqiYiEz-IDwDSxCJgHrnPKo",                  img:"./images/৪০ বাংলা অনুবাদ মোটিভেশনাল.jpeg" },
+  { id:10, title:"মোটিভেশন বুকস ০২",            cat:"মোটিভেশন",      emoji:"⚡", url:"https://drive.google.com/drive/folders/1UgemKvd1tyuk6ygZzYO5RyJirYUn1uRN",                  img:"./images/মোটিভেশন বুকস 02.jpeg" },
+  { id:11, title:"৯০ ইসলামিক গল্প বই",          cat:"ইসলামিক",       emoji:"📜", url:"https://drive.google.com/file/d/12g3VUl_x-pphAkgeMHLcIMSZB4Qk_rVu/view",                  img:"./images/৯০ ইসলামিক গল্প বই.jpeg" },
+  { id:12, title:"ওয়েস্টার্ন বুক",              cat:"আন্তর্জাতিক",  emoji:"🌎", url:"https://drive.google.com/drive/folders/1FHRaErtur26AzOMDqxXBP3DooL2s6owR",                  img:"./images/ওয়েস্টার্ন book.jpeg" },
+  { id:13, title:"Dale Carnegie (বাংলা)",        cat:"আন্তর্জাতিক",  emoji:"🏆", url:"https://drive.google.com/drive/folders/1hUQw0fbIQc9hul_0QJyg0YtKEoo16NLe?usp=sharing",      img:"./images/DALE CARNEGIE BOOK BANGLA.jpeg" },
+  { id:14, title:"Job Solution Book",            cat:"ক্যারিয়ার",    emoji:"💼", url:"https://drive.google.com/drive/folders/1XhQAqS_UKR3OaXcyHlxkqHJbGu_DBJe7?usp=sharing",      img:"./images/Job Solution book.jpeg" },
+  { id:15, title:"Environmental Science",        cat:"বিজ্ঞান",       emoji:"🌿", url:"https://bdenvironmentalscience.github.io/",                                                  img:"./images/Environmental Science.jpeg" },
+  { id:16, title:"কবিতার বই",                   cat:"সাহিত্য",       emoji:"🖋️", url:"https://drive.google.com/drive/folders/1x182MOAaycT7mHKsW_bxUN4U9WQ_MUod",                  img:"./images/কবিতার বই.jpeg" },
+  { id:17, title:"নতুন ও পুরাতন উপন্যাস",        cat:"সাহিত্য",       emoji:"📘", url:"https://drive.google.com/drive/folders/19AF8nEfZbbH1fnkDfSlRLzfJGBOt-lDo",                  img:"./images/নতুন & পুরাতন উপন্যাস বুক.jpeg" },
+  { id:18, title:"জীবন মৃত্যু",                  cat:"সাহিত্য",       emoji:"🕯️", url:"https://drive.google.com/drive/folders/11yIzbIyR68fA9aKjMAqrgnVKvGRPge_x?usp=sharing",      img:"./images/জীবন মৃত্যু.jpeg" },
+  { id:19, title:"অসাধারণ গল্প ০১",              cat:"গল্প",          emoji:"📖", url:"https://www.docdroid.net/qx6xK8K/mukt-bataser-khonnje-pdf#page=11",                        img:"./images/গল্প নিয়ে তৈরি অসাধারণ 01.jpeg" },
+  { id:20, title:"অসাধারণ গল্প ০২",              cat:"গল্প",          emoji:"📖", url:"https://drive.google.com/file/d/1eZOCqROQtE-Iyn7lQTZKI7nUZ5x9bXIi/view",                  img:"./images/গল্প নিয়ে তৈরি অসাধারণ 02.jpeg" },
+  { id:21, title:"অসাধারণ গল্প ০৩",              cat:"গল্প",          emoji:"📖", url:"https://drive.google.com/file/d/1oBuJxWHZkKraNfceXC9jOAnilongsrWp/view",                   img:"./images/গল্প নিয়ে তৈরি অসাধারণ 03.jpeg" },
+  { id:22, title:"অসাধারণ গল্প ০৪",              cat:"গল্প",          emoji:"📖", url:"https://drive.google.com/file/d/1D_2fDi30BQw8n9AMOMwh6Q0zLn-4A-kS/view",                   img:"./images/গল্প নিয়ে তৈরি অসাধারণ 04.jpeg" },
+  { id:23, title:"স্কিল ডেভেলপমেন্ট ০১",         cat:"স্কিল",         emoji:"🎯", url:"https://drive.google.com/u/1/uc?id=16JLsmzN9V8upcewzAriYMKheHqmIyjVB&export=download",      img:"./images/স্কিল ডেভেলপমেন্ট- 01.jpeg" },
+  { id:24, title:"স্কিল ডেভেলপমেন্ট ০২",         cat:"স্কিল",         emoji:"🎯", url:"https://drive.google.com/file/d/1Chajm8nnYilRQd5p2NSLxTKQ2bNeIuyr/view",                   img:"./images/স্কিল ডেভেলপমেন্ট- 02.jpeg" },
+  { id:25, title:"স্কিল ডেভেলপমেন্ট ০৩",         cat:"স্কিল",         emoji:"🎯", url:"https://drive.google.com/u/1/uc?id=1644gd41KCb0pWT3-bBJJpJLqWbHsBwea&export=download",      img:"./images/স্কিল ডেভেলপমেন্ট- 03.jpeg" },
+  { id:26, title:"স্কিল ডেভেলপমেন্ট ০৪",         cat:"স্কিল",         emoji:"🎯", url:"https://drive.google.com/file/d/1T22eXn5j8rjmRIBXgnc0kT_iv_v6r2N4/view?usp=sharing",      img:"./images/স্কিল ডেভেলপমেন্ট- 04.jpeg" },
+  { id:27, title:"স্কিল ডেভেলপমেন্ট ০৫",         cat:"স্কিল",         emoji:"🎯", url:"https://drive.google.com/file/d/1oEPNXxRpQPdOCmO-Vun8eau2heOFL_xb/view",                   img:"./images/স্কিল ডেভেলপমেন্ট- 05.jpeg" },
+  { id:28, title:"স্কিল ডেভেলপমেন্ট ০৬",         cat:"স্কিল",         emoji:"🎯", url:"https://drive.google.com/file/d/12RPkpFHRA91LD0FuwW0XQ-3dv2YdKNhb/view",                   img:"./images/স্কিল ডেভেলপমেন্ট- 06.jpeg" },
+  { id:29, title:"স্কিল ডেভেলপমেন্ট ০৭",         cat:"স্কিল",         emoji:"🎯", url:"https://drive.google.com/file/d/1oEPNXxRpQPdOCmO-Vun8eau2heOFL_xb/view",                   img:"./images/স্কিল ডেভেলপমেন্ট- 07.jpeg" },
+  { id:30, title:"স্কিল ডেভেলপমেন্ট ০৮",         cat:"স্কিল",         emoji:"🎯", url:"https://drive.google.com/file/d/1Y29na-IP3m4eNLX_IF-YrOAJmpi9KYZK/view",                   img:"./images/স্কিল ডেভেলপমেন্ট- 08.jpeg" },
+  { id:31, title:"স্কিল ডেভেলপমেন্ট ০৯",         cat:"স্কিল",         emoji:"🎯", url:"https://drive.google.com/file/d/1V-ZvSiRltOxF4ZybfkUF-KCM4Ke06-KF/view",                   img:"./images/স্কিল ডেভেলপমেন্ট- 09.jpeg" },
+  { id:32, title:"স্কিল ডেভেলপমেন্ট ১০",         cat:"স্কিল",         emoji:"🎯", url:"https://drive.google.com/file/d/13UTKETYvT25CPypNh-FQzmSBvezGGFKq/view",                   img:"./images/স্কিল ডেভেলপমেন্ট- 10.jpeg" },
+  { id:33, title:"স্কিল ডেভেলপমেন্ট ১১",         cat:"স্কিল",         emoji:"🎯", url:"https://drive.google.com/file/d/1W5p77ld9HblmX3YbyZApP_a7JE7MloXJ/view",                   img:"./images/স্কিল ডেভেলপমেন্ট- 11.jpeg" },
+  { id:34, title:"আরিফ আজাদ ০১",                cat:"আরিফ আজাদ",    emoji:"✨", url:"https://drive.google.com/file/d/1FLZVwLJpOLzkUhvStxUUXjbvL6p6dgCp/view",                   img:"./images/আরিফ আজাদ 01.jpeg" },
+  { id:35, title:"আরিফ আজাদ ০২",                cat:"আরিফ আজাদ",    emoji:"✨", url:"https://drive.google.com/file/d/1nw9E4w07fYyF8K5iAx8bLHEuZYZaxY9M/view",                   img:"./images/আরিফ আজাদ 02.jpeg" },
+  { id:36, title:"আরিফ আজাদ ০৩",                cat:"আরিফ আজাদ",    emoji:"✨", url:"https://drive.google.com/file/d/13Z_AtSmhrV6yu6YkX9Adt22QtKzoDCNt/view",                   img:"./images/আরিফ আজাদ 03.jpeg" },
+  { id:37, title:"আরিফ আজাদ ০৪",                cat:"আরিফ আজাদ",    emoji:"✨", url:"https://drive.google.com/file/d/1layWKTxeKOzWGoyhfOuDqpeEENitbS4L/view",                   img:"./images/আরিফ আজাদ 04.jpeg" },
+  { id:38, title:"আরিফ আজাদ ০৫",                cat:"আরিফ আজাদ",    emoji:"✨", url:"https://drive.google.com/file/d/1-D34y2Ym-e0-dqp-drObsEl_cTDqBfAA/view",                   img:"./images/আরিফ আজাদ 05.jpeg" },
+  { id:39, title:"আরিফ আজাদ ০৬",                cat:"আরিফ আজাদ",    emoji:"✨", url:"https://drive.google.com/file/d/1lX3rujRah7uIW6jpSF_j9jdUMj6i4N2X/view",                   img:"./images/আরিফ আজাদ 06.jpeg" },
+  { id:40, title:"আরিফ আজাদ ০৭",                cat:"আরিফ আজাদ",    emoji:"✨", url:"https://drive.google.com/file/d/1lYbDxqjpxWoXT_UoIDRkRvQxYLWJ_8mG/view",                   img:"./images/আরিফ আজাদ 07.jpeg" },
+  { id:41, title:"আরিফ আজাদ ০৮",                cat:"আরিফ আজাদ",    emoji:"✨", url:"https://drive.google.com/file/d/1lQWehAKGAUL_zwzJOwHhYHMfAK5hHWzn/view",                   img:"./images/আরিফ আজাদ 08.jpeg" },
+  { id:42, title:"আরিফ আজাদ ০৯",                cat:"আরিফ আজাদ",    emoji:"✨", url:"https://drive.google.com/file/d/1lPQpJAC6Cchy3ZWTFm4KTlKYaJv8zNBh/view",                   img:"./images/আরিফ আজাদ 09.jpeg" },
+  { id:43, title:"আরিফ আজাদ ১০",                cat:"আরিফ আজাদ",    emoji:"✨", url:"https://drive.google.com/file/d/1-KTZjyfhD8MbKPUkUf2pdoCjZq1eGTbN/view",                   img:"./images/আরিফ আজাদ 10.jpeg" },
+  { id:44, title:"আব্দুর রাজ্জাক ০১",            cat:"ইসলামিক",       emoji:"🕌", url:"https://drive.google.com/file/d/1ckylQiI8FnI0W8xnVF0hlG5c5mfndUHA/view",                   img:"./images/আব্দুর রাজ্জাক বিন ইউসুফ 01.jpeg" },
+  { id:45, title:"আব্দুর রাজ্জাক ০২",            cat:"ইসলামিক",       emoji:"🕌", url:"https://drive.google.com/file/d/1cI4KYHG54KyfzW0BxZ4w2HBxiQdhKxb4/view",                   img:"./images/আব্দুর রাজ্জাক বিন ইউসুফ 02.jpeg" },
+  { id:46, title:"আব্দুর রাজ্জাক ০৩",            cat:"ইসলামিক",       emoji:"🕌", url:"https://drive.google.com/file/d/1cIEvUME4S1X7Azhy7udbPPvnmOjg3BZ-/view",                   img:"./images/আব্দুর রাজ্জাক বিন ইউসুফ 03.jpeg" },
+  { id:47, title:"আব্দুর রাজ্জাক ০৪",            cat:"ইসলামিক",       emoji:"🕌", url:"https://drive.google.com/file/d/1cfV-Gyg2ZUzj1C2oSLqR2mIyaq8uonNq/view",                   img:"./images/আব্দুর রাজ্জাক বিন ইউসুফ 04.jpeg" },
+  { id:48, title:"আব্দুর রাজ্জাক ০৫",            cat:"ইসলামিক",       emoji:"🕌", url:"https://drive.google.com/file/d/1cR9-3DbHkUudkrXppj9bmv5b8vasnT9A/view",                   img:"./images/আব্দুর রাজ্জাক বিন ইউসুফ 05.jpeg" },
+  { id:49, title:"আব্দুর রাজ্জাক ০৬",            cat:"ইসলামিক",       emoji:"🕌", url:"https://drive.google.com/file/d/1c_DQJMx35r0MMTmT29PJv-RyZ5NoVdLS/view",                   img:"./images/আব্দুর রাজ্জাক বিন ইউসুফ 06.jpeg" },
+  { id:50, title:"আব্দুর রাজ্জাক ০৭",            cat:"ইসলামিক",       emoji:"🕌", url:"https://drive.google.com/file/d/1cLxvYaaZU4sQ7JAkePZ574gHU4GTj2JU/view",                   img:"./images/আব্দুর রাজ্জাক বিন ইউসুফ 07.jpeg" },
+  { id:51, title:"আব্দুর রাজ্জাক ০৮",            cat:"ইসলামিক",       emoji:"🕌", url:"https://drive.google.com/file/d/1cne2sTyHYV5WESwlinaaFmDq4S0K6uTS/view",                   img:"./images/আব্দুর রাজ্জাক বিন ইউসুফ 08.jpeg" },
+  { id:52, title:"আব্দুর রাজ্জাক ০৯",            cat:"ইসলামিক",       emoji:"🕌", url:"https://drive.google.com/file/d/125LP6UlanozmI96WDq4V8H3dqesE6F4R/view",                   img:"./images/আব্দুর রাজ্জাক বিন ইউসুফ 09.jpeg" },
+  { id:53, title:"আব্দুর রাজ্জাক ১০",            cat:"ইসলামিক",       emoji:"🕌", url:"https://drive.google.com/file/d/1cTYs6BCpoR_karLvTwUh1eeP9FjOcbUM/view",                   img:"./images/আব্দুর রাজ্জাক বিন ইউসুফ 10.jpeg" },
+  { id:54, title:"আব্দুর রাজ্জাক ১১",            cat:"ইসলামিক",       emoji:"🕌", url:"https://drive.google.com/file/d/1cgS3bVkFlOZM1ipwfpLkQWKnJQOs9_0U/view",                   img:"./images/আব্দুর রাজ্জাক বিন ইউসুফ 11.jpeg" },
+  { id:55, title:"বাংলাদেশ ও মুক্তিযুদ্ধ",        cat:"ইতিহাস",        emoji:"🏴", url:"https://drive.google.com/drive/folders/1OHsO5wnaxN4gqy82Vu6S9KUZz0GNktJA",                  img:"./images/বাংলাদেশ ও মুক্তিযুদ্ধ.jpeg" },
+  { id:56, title:"Self-Improvement",             cat:"স্কিল",         emoji:"🚀", url:"https://drive.google.com/drive/folders/1uQdLyz8bBJxCnMaTGK8ib_bdUkmNyZQ4?usp=sharing",      img:"" },
+  { id:57, title:"Negotiation",                  cat:"ক্যারিয়ার",    emoji:"🤝", url:"https://drive.google.com/drive/folders/1m1c3VGpVTNvj-dD_TwqyKqsvlX1c0_kp?usp=sharing",      img:"" },
+  { id:58, title:"Sales",                        cat:"ক্যারিয়ার",    emoji:"📈", url:"https://drive.google.com/drive/folders/13anU2Nt151oCu7pS5ut7cX528rLWtryS?usp=drive_link",    img:"" },
+  { id:59, title:"Stress Management",            cat:"স্কিল",         emoji:"🧘", url:"https://drive.google.com/drive/folders/1CtfAOgeLl7f1M-NMx9icyrEq3TEoBfJF?usp=drive_link",   img:"" },
+  { id:60, title:"Financial Planning",           cat:"ক্যারিয়ার",    emoji:"💰", url:"https://drive.google.com/drive/folders/14QR80F4E_3gbsyD-oWuUois_Hzr4Fnny?usp=drive_link",   img:"" },
+  { id:61, title:"Networking",                   cat:"ক্যারিয়ার",    emoji:"🌐", url:"https://drive.google.com/drive/folders/1GwbzxHQTCH0W7FxsSANc2KrbG_VYybpw?usp=drive_link",   img:"" },
+  { id:62, title:"Discipline",                   cat:"স্কিল",         emoji:"⚙️", url:"https://drive.google.com/drive/folders/1ADMaF3WyFb_eZnjP7fE64UVxOV_gSTOo?usp=drive_link",  img:"" },
+  { id:63, title:"Risk-Taking",                  cat:"স্কিল",         emoji:"🎲", url:"https://drive.google.com/drive/folders/1ymxcYc7e-CBLC2YR2MHTQGRR55-LR01q?usp=drive_link",  img:"" },
+  { id:64, title:"Goal Setting",                 cat:"স্কিল",         emoji:"🎯", url:"https://drive.google.com/drive/folders/1sFbL_03Y5PmNcDpWn5EjKps0CKRY5sJu?usp=drive_link",  img:"" },
+  { id:65, title:"Time Management",              cat:"স্কিল",         emoji:"⏰", url:"https://drive.google.com/drive/folders/1oMgSSM6l6zn_V5JDh0MiuLfnijRxqBzc?usp=drive_link",  img:"" },
+];
+
+// Pastel color map per category
+const catColors = {
+  "ইসলামিক":      "linear-gradient(135deg,#1a2a1e,#243324)",
+  "কালেকশন":      "linear-gradient(135deg,#1e1e2e,#252538)",
+  "মোটিভেশন":     "linear-gradient(135deg,#2a1a10,#382518)",
+  "আন্তর্জাতিক":  "linear-gradient(135deg,#1a2030,#1e2840)",
+  "ক্যারিয়ার":   "linear-gradient(135deg,#1e2a1a,#263520)",
+  "বিজ্ঞান":      "linear-gradient(135deg,#1a2828,#1e3030)",
+  "সাহিত্য":      "linear-gradient(135deg,#28201a,#352818)",
+  "গল্প":         "linear-gradient(135deg,#28201a,#302818)",
+  "স্কিল":        "linear-gradient(135deg,#1a1e28,#20263a)",
+  "আরিফ আজাদ":   "linear-gradient(135deg,#281a20,#38202a)",
+  "ইতিহাস":       "linear-gradient(135deg,#201a10,#302416)",
+};
+
+let activeFilter = "সব";
+
+/* ═══ LOGIN ═══ */
+function handleLogin() {
+  const id   = document.getElementById('login-id').value.trim();
+  const pass = document.getElementById('login-pass').value.trim();
+  const err  = document.getElementById('login-error');
+
+  if (id === 'admin' && pass === '12345') {
+    err.classList.remove('show');
+    document.getElementById('login-page').classList.add('hidden');
+    const app = document.getElementById('app');
+    app.classList.add('visible');
+    renderFilters();
+    renderBooks();
+    showToast('স্বাগতম! লাইব্রেরিতে প্রবেশ হয়েছে 📚');
+  } else {
+    err.classList.add('show');
+    err.style.animation = 'none';
+    setTimeout(() => err.style.animation = '', 10);
+  }
+}
+
+function handleLogout() {
+  document.getElementById('login-page').classList.remove('hidden');
+  document.getElementById('app').classList.remove('visible');
+  document.getElementById('login-id').value = '';
+  document.getElementById('login-pass').value = '';
+  document.getElementById('search-input').value = '';
+  activeFilter = "সব";
+}
+
+/* ═══ FILTERS ═══ */
+function renderFilters() {
+  const cats = ["সব", ...new Set(books.map(b => b.cat))];
+  const container = document.getElementById('filter-tabs');
+  container.innerHTML = cats.map(c =>
+    `<button class="filter-tab ${c === activeFilter ? 'active' : ''}" onclick="setFilter('${c}')">${c}</button>`
+  ).join('');
+}
+
+function setFilter(cat) {
+  activeFilter = cat;
+  renderFilters();
+  filterBooks();
+}
+
+/* ═══ BOOKS ═══ */
+function filterBooks() {
+  const q = document.getElementById('search-input').value.toLowerCase();
+  const filtered = books.filter(b => {
+    const matchCat  = activeFilter === "সব" || b.cat === activeFilter;
+    const matchSearch = b.title.toLowerCase().includes(q) || b.cat.toLowerCase().includes(q);
+    return matchCat && matchSearch;
+  });
+  renderGrid(filtered);
+}
+
+function renderGrid(list) {
+  const grid  = document.getElementById('book-grid');
+  const count = document.getElementById('result-count');
+  count.textContent = `${list.length} books`;
+
+  if (list.length === 0) {
+    grid.innerHTML = `
+      <div class="empty-state">
+        <i class="fa-solid fa-magnifying-glass"></i>
+        <h3>কোনো বই পাওয়া যায়নি</h3>
+        <p>অনুসন্ধান পরিবর্তন করে আবার চেষ্টা করুন</p>
+      </div>`;
+    return;
+  }
+
+  grid.innerHTML = list.map((b, i) => {
+    const bg = catColors[b.cat] || "linear-gradient(135deg,#1a1a22,#222230)";
+    const coverContent = b.img
+      ? `<img src="${b.img}" alt="${b.title}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">`
+      : '';
+    const fallbackDisplay = b.img ? 'none' : 'flex';
+
+    return `
+      <div class="book-card" style="animation-delay:${i * 0.04}s">
+        <div class="book-cover" style="background:${bg}">
+          ${coverContent}
+          <div class="book-cover-fallback" style="display:${fallbackDisplay}">
+            <span style="font-size:2.8rem">${b.emoji}</span>
+            <span>${b.title}</span>
+          </div>
+          <div class="book-category-badge">${b.cat}</div>
+          <div class="book-overlay">
+            <a href="${b.url}" target="_blank" rel="noopener" class="read-btn" onclick="event.stopPropagation()">
+              <i class="fa-solid fa-book-open"></i> Read Now
+            </a>
+          </div>
+        </div>
+        <div class="book-info">
+          <p class="book-title">${b.title}</p>
+          <p class="book-sub">${b.cat}</p>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+function renderBooks() { filterBooks(); }
+
+/* ═══ SCROLL TOP ═══ */
+window.addEventListener('scroll', () => {
+  const btn = document.getElementById('back-top');
+  btn.classList.toggle('visible', window.scrollY > 400);
+});
+
+/* ═══ TOAST ═══ */
+function showToast(msg) {
+  const toast = document.getElementById('toast');
+  document.getElementById('toast-msg').textContent = msg;
+  toast.classList.add('show');
+  setTimeout(() => toast.classList.remove('show'), 3000);
+}
+
+/* ═══ ENTER KEY LOGIN ═══ */
+document.addEventListener('keydown', e => {
+  if (e.key === 'Enter' && !document.getElementById('login-page').classList.contains('hidden')) {
+    handleLogin();
+  }
+});
+</script>
+</body>
+</html>
